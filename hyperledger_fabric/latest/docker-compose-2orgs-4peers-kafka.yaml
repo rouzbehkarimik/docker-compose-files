@@ -37,23 +37,42 @@ services:
     extends:
       file: base-kafka.yaml
       service: peer0.org1.example.com
+    environment:
+      - CORE_LEDGER_STATE_STATEDATABASE=CouchDB
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS=couchdb0:5984
     depends_on:
+      - couchdb0
       - orderer.example.com
 
   peer1.org1.example.com:
     extends:
       file: base-kafka.yaml
       service: peer1.org1.example.com
+    environment:
+      - CORE_LEDGER_STATE_STATEDATABASE=CouchDB
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS=couchdb1:5984
+    depends_on:
+      - couchdb1
 
   peer0.org2.example.com:
     extends:
       file: base-kafka.yaml
       service: peer0.org2.example.com
+    environment:
+      - CORE_LEDGER_STATE_STATEDATABASE=CouchDB
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS=couchdb2:5984
+    depends_on:
+      - couchdb2
 
   peer1.org2.example.com:
     extends:
       file: base-kafka.yaml
       service: peer1.org2.example.com
+    environment:
+      - CORE_LEDGER_STATE_STATEDATABASE=CouchDB
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS=couchdb3:5984
+    depends_on:
+      - couchdb3
 
 # ZooKeeper services, at least 3 nodes
   zookeeper0:
@@ -108,6 +127,72 @@ services:
       - zookeeper1
       - zookeeper2
 
+  couchdb0:
+    extends:
+      file: base.yaml
+      service: couchdb-base
+    container_name: couchdb0
+    # Comment/Uncomment the port mapping if you want to hide/expose the CouchDB service,
+    # for example map it to utilize Fauxton User Interface in dev environments.
+    ports:
+      - "5984:5984"  # this is the restful API addr, can also access fauxton web ui thru http://localhost:5984/_utils/
+
+  couchdb1:
+    extends:
+      file: base.yaml
+      service: couchdb-base
+    container_name: couchdb1
+    # Comment/Uncomment the port mapping if you want to hide/expose the CouchDB service,
+    # for example map it to utilize Fauxton User Interface in dev environments.
+    ports:
+      - "6984:5984"
+
+  couchdb2:
+    extends:
+      file: base.yaml
+      service: couchdb-base
+    container_name: couchdb2
+    # Comment/Uncomment the port mapping if you want to hide/expose the CouchDB service,
+    # for example map it to utilize Fauxton User Interface in dev environments.
+    ports:
+      - "7984:5984"
+
+  couchdb3:
+    extends:
+      file: base.yaml
+      service: couchdb-base
+    container_name: couchdb3
+    # Comment/Uncomment the port mapping if you want to hide/expose the CouchDB service,
+    # for example map it to utilize Fauxton User Interface in dev environments.
+    ports:
+      - "8984:5984"
+
+  explorer:
+    extends:
+      file: base.yaml
+      service: explorer-base
+    container_name: explorer
+    hostname: explorer
+    depends_on:
+      - mysql
+    volumes:
+      - ./explorer-artifacts/config.json:/blockchain-explorer/config.json
+      - ./crypto-config:/blockchain-explorer/first-network/crypto-config
+    ports:
+      - "8080:8080"  # HTTP port
+
+  mysql: # mysql service
+    extends:
+      file: base.yaml
+      service: mysql-base
+    container_name: mysql
+    hostname: mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_DATABASE=fabricexplorer
+    volumes:
+      - ./explorer-artifacts/fabricexplorer.sql:/docker-entrypoint-initdb.d/fabricexplorer.sql
+                    
 #networks:
 #  default:
 #    external:
